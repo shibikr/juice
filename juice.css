@@ -1,8 +1,6 @@
-.diagram{
-	background: lightgrey;
+.describe{
 	position: absolute;
-	top: 20%;
-	left: 35%;
-	height: 600px;
-	width: 600px;
-};
+	text-align: left;
+	width: 10px;
+	height: 200px;
+}

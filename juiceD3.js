@@ -1,12 +1,7 @@
-var w = '100%',                        //width
-    h = 2000,                            //height
-    r = 700,                            //radius
-    color = d3.scale.category20b();     //builtin range of colors
+ d3.json('juice_orders',function(err, data){
 
-d3.json('juice_orders',function(err, data){
-
-		var drinkNames = data.map(function(juice){
-		return juice.drinkName;
+	var drinkNames = data.map(function(juice){
+	return juice.drinkName;
 	});
 
 	var distinctDrinks = drinkNames.filter(function(item, i, ar){ 
@@ -22,32 +17,67 @@ d3.json('juice_orders',function(err, data){
 				count ++;
 			};
 		});
-		if(drink != 'CTL')
+		if(drink != 'CTL' && drink != "ctl" && drink != "Fruits" &&
+			drink != "banana" && drink != "Apple" && drink != "Register User")
 			distinctDrinksData.push({'label':drink,'value':count});
-	});	
-	
-    var vis = d3.select("body")
-        .append("svg:svg")              //create the SVG element inside the <body>
-        .data([distinctDrinksData])                   //associate our data with the document
-            .attr("width", w)           //set the width and height of our visualization (these will be attributes of the <svg> tag
-            .attr("height", h)
-        .append("svg:g")                //make a group to hold our pie chart
-            .attr("transform", "translate(" + r + "," + r + ")")    //move the center of the pie chart from 0, 0 to radius, radius
-    var arc = d3.svg.arc()              //this will create <path> elements for us using arc data
-        .outerRadius(r);
-    var pie = d3.layout.pie()           //this will create arc data for us given a list of values
-        .value(function(d) { return d.value; });    //we must tell it out to access the value of each element in our data array
-    var arcs = vis.selectAll("g.slice")     //this selects all <g> elements with class slice (there aren't any yet)
-        .data(pie)                          //associate the generated pie data (an array of arcs, each having startAngle, endAngle and value properties) 
-        .enter()                            //this will create <g> elements for every "extra" data element that should be associated with a selection. The result is creating a <g> for every object in the data array
-            .append("svg:g")                //create a group to hold each slice (we will have a <path> and a <text> element associated with each slice)
-                .attr("class", "slice");   //allow us to style things in the slices (like text)
-        arcs.append("svg:path")
-                .attr("fill", function(d, i) { return color(i); } ) //set the color for each slice to be chosen from the color function defined above
-                .attr("d", arc);                                    //this creates the actual SVG path using the associated data (pie) with the arc drawing function
-        arcs.append("svg:text") 
-            .attr("title", function(d, i){ console.log(distinctDrinksData[i].label); return distinctDrinksData[i].label});
-            // .attr("onClick",clickPie);                          //center the text on it's origin
-            // .text(function(d, i) { return distinctDrinksData[i].label; });        //get the label from our original data array
+	});
+
+	distinctDrinksData.sort(function(data1,data2){
+		return data2.value - data1.value 
+	});
+
+	var margin = {top: 10, right:0, bottom: 180, left: 120},
+		width = 1500 - margin.left -200,
+   	    height = 800
+        radius = Math.min(width, height) / 2;
+
+    var color = d3.scale.category20b();   
+
+	var arc = d3.svg.arc()
+	    .outerRadius(radius - 100)
+	    .innerRadius(radius - 200);
+
+	var pie = d3.layout.pie()
+	    .sort(null)
+	    .value(function(d) { return d.value; });
+
+	var svg = d3.select("body").append("svg")
+	    .attr("width", width)
+	    .attr("height", height)
+	  	.append("g")
+	    .attr("transform", "translate(" + width / 1.4 + "," + height / 2.1 + ")");
+
+	svg.append("text")
+		.attr("class", "describe")
+		.attr("transform", "translate(-100,0)");
+
+	svg.append("text")
+		.attr("class", "totalNumber")
+		.attr("transform", "translate(-100,20)");
+
+	var g = svg.selectAll(".arc")
+	    .data(pie(distinctDrinksData))
+	    .enter().append("g")
+	    .attr("class", "arc");
+
+	   g.append("path")
+	    .attr("d", arc)
+	    .style("fill", function(d) {return color(d.label); });
+
+	   g.append("svg:path")
+        .attr("fill", function(d, i) { return color(i); }) 
+        .attr("d", arc)
+        .on("mouseover",  function(d,i){
+	        d3.select('.describe')
+	        .text("Juice name : "+d.data.label )
+
+	        d3.select('.totalNumber')
+	        .text("Total Number : "+d.data.value)
+      	})
+        .on("mouseout",function(d,i){
+          d3.select('.describe')
+          .text("");
+          d3.select('.totalNumber')
+	        .text("");
+        });
 });
-    
